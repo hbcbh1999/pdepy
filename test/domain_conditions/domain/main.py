@@ -12,6 +12,11 @@ class Test(unittest.TestCase):
         delta_x, delta_y = self.domain.getDelta(10, 20)
         assert abs(delta_x - 0.2) < np.spacing(1)
         assert abs(delta_y - 0.1) < np.spacing(1)
+    
+    def test_1d(self):
+        delta_x, delta_y = self.domain.getDelta(10, 0)
+        assert abs(delta_x - 0.2) < np.spacing(1)
+        assert delta_y == None
 
 if __name__ == '__main__':
     unittest.main()

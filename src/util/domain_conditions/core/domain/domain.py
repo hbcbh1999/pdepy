@@ -13,4 +13,5 @@ class domain:
     def getDelta(self, nx, ny):
         x1, y1 = self.lower_left_coord
         x2, y2 = self.upper_right_coord
-        return (abs(x2-x1)/nx, abs(y2-y1)/ny)
+        
+        return (abs(x2-x1)/nx, abs(y2-y1)/ny) if ny != 0 else (abs(x2-x1)/nx, None)
