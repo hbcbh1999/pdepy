@@ -14,4 +14,4 @@ class domain:
         x1, y1 = self.lower_left_coord
         x2, y2 = self.upper_right_coord
         
-        return (abs(x2-x1)/nx, abs(y2-y1)/ny) if ny != 0 else (abs(x2-x1)/nx, None)
+        return (abs(x2-x1)/(nx+1), abs(y2-y1)/(ny+1)) if ny != 1 else (abs(x2-x1)/nx, None)

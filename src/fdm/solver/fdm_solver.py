@@ -1,3 +1,4 @@
+import numpy as np
 class fdm_solver:
     def __init__(self, diff_op_expression, f, domain_condition, get_nearest_point = (None, None)):
         self.diff_op_expression = diff_op_expression
@@ -10,5 +11,17 @@ class fdm_solver:
         # used by irregular domain
         self.get_nearest_point = get_nearest_point
     
-    def solve(self, nx, ny = 0):
-        delta_x, delta_y = self.domain.getDelta(nx, ny)
+    def solve(self, nx, ny = 1):
+        """
+        nx is the grid points number in x axis; ny is the symmetry of ny.
+        The following grid has nx = 4, ny = 3
+         _ _ _ _ _
+        |_|_|_|_|_|
+        |_|_|_|_|_|
+        |_|_|_|_|_|
+        |_|_|_|_|_|
+        """
+        dx, dy = self.domain.getDelta(nx, ny)
+        A = np.zeros([ny, nx])
+        fv, u = np.zeros(ny * nx), np.zeros(ny * nx)
+        

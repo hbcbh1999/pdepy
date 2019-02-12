@@ -1,4 +1,4 @@
-class diff_operator:
+class diff_operator(object):
     def __init__(self, stencil, coefficient = 1):
         # a list of tuple whose first element is relative position of node in the stencil, 
         # second element is the coefficient in the fdm equation
