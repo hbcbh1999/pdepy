@@ -12,6 +12,7 @@ class fdm_solver:
         self.get_nearest_point = get_nearest_point
         self.index_to_grid = None
         self.grid_to_index = {}
+        self.vector_len = 0
     
     def solve(self, nx, ny = 1):
         """
@@ -23,17 +24,33 @@ class fdm_solver:
         |_|_|_|_|_|
         |_|_|_|_|_|
         """
+        self.preprocess(nx, ny)
         dx, dy = self.domain.getDelta(nx, ny)
-        A = np.zeros([ny, nx])
-        fv, u = np.zeros(ny * nx), np.zeros(ny * nx)
+        A = np.zeros([self.vector_len, self.vector_len])
+        fv, u = np.zeros(self.vector_len), np.zeros(self.vector_len)
+        for index in range(self.vector_len):
+            for op in self.diff_op_expression:
+                for node in op.stencil:
+                    coord, coeff = node
+                    x_offset, y_offset = coord
+                    pass
+
         
-    def preprocess(self, dx, dy, nx, ny = 1):
-        self.index_to_grid = np.zeros(nx*ny)
-        for j in range(0, ny):
-            y_offset = j + 1
-            for i in range(0, nx):
-                x_offset = i + 1
-                x, y = self.domain.upper_left_coord + np.array([x_offset*dx, y_offset*dy])
-                
+    def preprocess(self, nx, ny = 1):
+        dx, dy = self.domain.getDelta(nx, ny)
+        self.index_to_grid = np.zeros(nx*ny, dtype=(int, 2))
+        self.vector_len = 0
+        for j in range(0, ny): # grid index on y axis
+            for i in range(0, nx): # grid index on x axis
+                x, y = self._get_coord_by_offset(dx, dy, i, j) # the real (x,y) coordinate
+                if self.domain_condition.inDomain(x, y):
+                    self.index_to_grid[self.vector_len] = (i, j)
+                    self.grid_to_index[(i, j)] = self.vector_len
+                    self.vector_len += 1
+
+    def _get_coord_by_offset(self, dx, dy, x_grid_index, y_grid_index):
+        x_offset, y_offset = x_grid_index + 1, y_grid_index + 1
+        return self.domain.lower_left_coord + np.array([x_offset*dx, y_offset*dy])
+
 
         
