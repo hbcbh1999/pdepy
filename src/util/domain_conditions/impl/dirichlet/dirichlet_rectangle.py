@@ -4,6 +4,6 @@ from domain_conditions.core.boundary_condition import bc # domain_conditions' co
 # from core.domain import domain as dm
 
 class dirichlet_rectangular_bc(bc.boundary_condition):
-    def __init__(self, inDomain, onBoundary, getBoundaryValue, domain):
-        super().__init__(inDomain, onBoundary, getBoundaryValue)
+    def __init__(self, inDomain, onBoundary, getBoundaryValue, domain, getNearestPoint = (None, None)):
+        super().__init__(inDomain, onBoundary, getBoundaryValue, getNearestPoint)
         self.domain = domain # this is the class domain

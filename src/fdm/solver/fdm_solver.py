@@ -1,15 +1,10 @@
 import numpy as np
 class fdm_solver:
-    def __init__(self, diff_op_expression, f, domain_condition, get_nearest_point = (None, None)):
+    def __init__(self, diff_op_expression, f, domain_condition):
         self.diff_op_expression = diff_op_expression
         self.f = f
         self.domain_condition = domain_condition
         self.domain = domain_condition.domain
-        # get_nearest_point is a 2 element function tuple, 
-        # where the first one takes (x, y) and gives the closest point on x axis,
-        # and the second one gives the closest point on y axis.
-        # used by irregular domain
-        self.get_nearest_point = get_nearest_point
         self.index_to_grid = None
         self.grid_to_index = {}
         self.vector_len = 0
@@ -29,11 +24,24 @@ class fdm_solver:
         A = np.zeros([self.vector_len, self.vector_len])
         fv, u = np.zeros(self.vector_len), np.zeros(self.vector_len)
         for index in range(self.vector_len):
+            x, y = self.index_to_grid(index)
+            fv[index] = self.f(*self._get_coord_by_offset(dx, dy, x, y))
             for op in self.diff_op_expression:
                 for node in op.stencil:
                     coord, coeff = node
                     x_offset, y_offset = coord
-                    pass
+                    cur_x, cur_y = x + x_offset, y + y_offset
+                    cur_x_coord, cur_y_coord = self._get_coord_by_offset(dx, dy, cur_x, cur_y)
+                    if self.domain_condition.onBoundary(cur_x_coord, cur_y_coord):
+                        bv = self.domain_condition.getBoundaryValue(cur_x_coord, cur_y_coord)
+                        u[index] -= op.coefficient * coeff * bv
+                    elif not self.domain_condition.inDomain(cur_x_coord, cur_y_coord):
+                        if not self._has_getNearestPoint(ny): raise NotImplementedError
+                        pass
+                    else:
+                        A[index, self.grid_to_index[cur_x, cur_y]] += op.coefficient * coeff
+        return np.linalg.solve(A, fv + u)
+
 
         
     def preprocess(self, nx, ny = 1):
@@ -52,5 +60,10 @@ class fdm_solver:
         x_offset, y_offset = x_grid_index + 1, y_grid_index + 1
         return self.domain.lower_left_coord + np.array([x_offset*dx, y_offset*dy])
 
-
-        
+    def _has_getNearestPoint(self, ny):
+        if self.domain_condition.getNearestPoint[0] is None:
+            return False
+        elif self.domain_condition.getNearestPoint[1] is None and ny != 1:
+            return False
+        return True
+    
