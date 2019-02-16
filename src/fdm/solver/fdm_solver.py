@@ -1,4 +1,6 @@
 import numpy as np
+from scipy.sparse import csr_matrix
+from scipy.sparse.linalg import spsolve
 class fdm_solver:
     def __init__(self, diff_op_expression, f, domain_condition):
         self.diff_op_expression = diff_op_expression
@@ -40,9 +42,7 @@ class fdm_solver:
                         pass
                     else:
                         A[index, self.grid_to_index[cur_x, cur_y]] += op.coefficient * coeff
-        return np.linalg.solve(A, fv + u)
-
-
+        return spsolve(csr_matrix(A), fv + u)
         
     def preprocess(self, nx, ny = 1):
         dx, dy = self.domain.getDelta(nx, ny)
