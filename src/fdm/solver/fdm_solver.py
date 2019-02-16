@@ -24,7 +24,7 @@ class fdm_solver:
         A = np.zeros([self.vector_len, self.vector_len])
         fv, u = np.zeros(self.vector_len), np.zeros(self.vector_len)
         for index in range(self.vector_len):
-            x, y = self.index_to_grid(index)
+            x, y = self.index_to_grid[index]
             fv[index] = self.f(*self._get_coord_by_offset(dx, dy, x, y))
             for op in self.diff_op_expression:
                 for node in op.stencil:

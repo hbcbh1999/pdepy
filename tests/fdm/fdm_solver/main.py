@@ -28,10 +28,29 @@ class Test(unittest.TestCase):
         self.solver2 = fdm.fdm_solver(self.expression, lambda x, y: 1, self.diri2)
 
         domain_s = dm.domain(np.array([0, 0]), np.array([1, 1]))
-        inDomain_s = lambda x, y: abs(x) < 1 and abs(y) < 1
-        onBoundary_s = lambda x, y: abs(x-1) < np.spacing(1) or abs(x+1) < np.spacing(1) \
-            or abs(y-1) < np.spacing(1) or abs(y+1) < np.spacing(1)
+        inDomain_s = lambda x, y: 0 < x < 1 and 0 < y < 1
+        onBoundary_s = lambda x, y: abs(x-1) < np.spacing(1) or abs(x) < np.spacing(1) \
+            or abs(y-1) < np.spacing(1) or abs(y) < np.spacing(1)
+        getBoundaryValue_s = lambda x, y: 1/(1+x) + 1/(1+y)
+        f_s = lambda x, y: 2/(1+x)**3 + 2/(1+y)**3
+        self.dirichlet = dr.dirichlet_rectangular_bc(inDomain_s, onBoundary_s, getBoundaryValue_s, domain_s)
+        self.real_solver = fdm.fdm_solver([], f_s, self.dirichlet)
 
+    def test_solve(self):
+        real_function = lambda x, y: 1/(1+x) + 1/(1+y)
+        for n in [9, 19, 39, 79]:
+            dx, dy = 1/(n+1), 1/(n+1)
+            self.real_solver.diff_op_expression = [laplacian2d.laplacian2d(dx, dy)]
+            u = self.real_solver.solve(n, n)
+            real_u = np.zeros(n**2)
+            for j in range(0, n):
+                y = (j+1)/(n+1)
+                for i in range(0, n):
+                    x = (i+1)/(n+1)
+                    real_u[j*n+i] = real_function(x, y)
+            print(f"when n = {n}, the error is {max(abs(real_u-u))}")
+
+        
     def test_preprocess(self):
         self.solver.preprocess(19, 9)
         assert self.solver.vector_len == 171
