@@ -9,6 +9,7 @@ class diff_operator_expression:
     "expression" is a list which contains objects from class "diff_operator"
     """
     def __init__(self, ops = []):
+        self.length = 0
         self.expression = []
         for op in ops:
             self.append(op)
@@ -16,7 +17,8 @@ class diff_operator_expression:
     def append(self, op):
         def check_and_append(op):
             if isinstance(op, diff_op.diff_operator):
-                self.expression.append(diff_op)
+                self.expression.append(op)
+                self.length += 1
             else:
                 raise TypeError("Adding non-operator into the expression")
         if type(op) is list:
@@ -24,3 +26,18 @@ class diff_operator_expression:
                 check_and_append(o)
         else:
             check_and_append(op)
+
+    def __len__(self):
+        return self.length
+
+    def __iter__(self):
+        self.n = 0
+        return self
+    
+    def __next__(self):
+        if self.n < self.length:
+            result = self.expression[self.n]
+            self.n += 1
+            return result
+        else:
+            raise StopIteration

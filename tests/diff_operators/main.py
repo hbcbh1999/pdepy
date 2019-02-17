@@ -1,7 +1,7 @@
 import sys, os
 sys.path.append(os.path.dirname(os.path.abspath(__file__))+"/../../src/util/diff_operators/")
-import impl.ddx as ddx, impl.ddy as ddy
-import core.diff_op as diff_op
+import impl.ddx as ddx, impl.ddy as ddy, impl.ddt as ddt, impl.time_dependent_d2dx as td_d2dx
+import core.diff_op as diff_op, core.time_dependent_op as td_op
 import unittest
 
 class Test(unittest.TestCase):
@@ -19,6 +19,8 @@ class Test(unittest.TestCase):
 
     def test_inheritance(self):
         assert issubclass(ddx.ddx, diff_op.diff_operator)
+        assert issubclass(ddt.ddt, td_op.time_dependent_operator)
+        assert issubclass(td_d2dx.td_d2dx, td_op.time_dependent_operator)
 
 if __name__ == '__main__':
     unittest.main()

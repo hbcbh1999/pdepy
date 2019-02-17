@@ -4,7 +4,8 @@ import fdm_solver as fdm
 sys.path.append(os.path.dirname(os.path.abspath(__file__))+"/../../../src/util/diff_operator_expression")
 import diff_op_expression as expr
 sys.path.append(os.path.dirname(os.path.abspath(__file__))+"/../../../src/util/")
-import diff_operators.impl.ddx as ddx, diff_operators.impl.ddy as ddy, diff_operators.impl.laplacian2d as laplacian2d
+import diff_operators.impl.ddx as ddx, diff_operators.impl.ddy as ddy, diff_operators.impl.laplacian2d as laplacian2d,\
+    diff_operators.impl.ddt as ddt, diff_operators.impl.time_dependent_d2dx as td_d2dx
 import diff_operators.core.diff_op as diff_op
 sys.path.append(os.path.dirname(os.path.abspath(__file__))+"/../../../src/util/domain_conditions/core/domain")
 sys.path.append(os.path.dirname(os.path.abspath(__file__))+"/../../../src/util/domain_conditions/impl/dirichlet")
@@ -38,9 +39,10 @@ class Test(unittest.TestCase):
 
     def test_solve(self):
         real_function = lambda x, y: 1/(1+x) + 1/(1+y)
+        error = []
         for n in [9, 19, 39, 79]:
             dx, dy = 1/(n+1), 1/(n+1)
-            self.real_solver.diff_op_expression = [laplacian2d.laplacian2d(dx, dy)]
+            self.real_solver.diff_op_expression = expr.diff_operator_expression([laplacian2d.laplacian2d(dx, dy)])
             u = self.real_solver.solve(n, n)
             real_u = np.zeros(n**2)
             for j in range(0, n):
@@ -48,7 +50,12 @@ class Test(unittest.TestCase):
                 for i in range(0, n):
                     x = (i+1)/(n+1)
                     real_u[j*n+i] = real_function(x, y)
-            print(f"when n = {n}, the error is {max(abs(real_u-u))}")
+            error.append(max(abs(real_u-u)))
+            # print(f"when n = {n}, the error is {max(abs(real_u-u))}")
+        assert error[0] < .000554
+        assert error[1] < .000141
+        assert error[2] < .000036
+        assert error[3] < .000009
 
         
     def test_preprocess(self):
@@ -63,6 +70,21 @@ class Test(unittest.TestCase):
     def test_has_getNearestPoint(self):
         assert self.solver._has_getNearestPoint(2) == False
         assert self.solver2._has_getNearestPoint(2) == True
+
+    def test_is_time_dependent(self):
+        a = ddt.ddt(0.1)
+        b = td_d2dx.td_d2dx(0.1)
+        expression = expr.diff_operator_expression([a, b])
+        self.solver.diff_op_expression = expression
+        assert self.solver._is_time_dependent() is True
+        assert self.solver._all_ops_are_time_dependent() is True
+        
+    def test_all_ops_are_time_dependent(self):
+        a = ddt.ddt(0.1)
+        b = ddx.ddx(0.1)
+        expression = expr.diff_operator_expression([a, b])
+        self.solver.diff_op_expression = expression
+        assert self.solver._all_ops_are_time_dependent() is False
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,3 +1,6 @@
+import sys, os
+sys.path.append(os.path.dirname(os.path.abspath(__file__))+'/../../util/diff_operators')
+import core.time_dependent_op as td
 import numpy as np
 from scipy.sparse import csr_matrix
 from scipy.sparse.linalg import spsolve
@@ -67,3 +70,14 @@ class fdm_solver:
             return False
         return True
     
+    def _is_time_dependent(self):
+        for op in self.diff_op_expression:
+            if isinstance(op, td.time_dependent_operator):
+                return True
+        return False
+    
+    def _all_ops_are_time_dependent(self):
+        for op in self.diff_op_expression:
+            if not isinstance(op, td.time_dependent_operator):
+                return False
+        return True
