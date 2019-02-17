@@ -7,7 +7,7 @@ from scipy.sparse.linalg import spsolve
 class fdm_solver:
     def __init__(self, diff_op_expression, f, domain_condition):
         self.diff_op_expression = diff_op_expression
-        self.f = f
+        self.f = f # if it's a time dependent problem, require f(x, t)
         self.domain_condition = domain_condition
         self.domain = domain_condition.domain
         self.index_to_grid = None
@@ -24,6 +24,15 @@ class fdm_solver:
         |_|_|_|_|_|
         |_|_|_|_|_|
         """
+        # For time dependent PDE, it requires that self.domain is exactly the domain of PDE
+        if self._is_time_dependent():
+            if not self._all_ops_are_time_dependent(): raise TypeError
+            return self.time_dependent_solve(ny, nx)
+        else:
+            return self.spatial_solve(nx, ny)
+    
+    def spatial_solve(self, nx, ny):
+        # This function handles the case where all the operators are not time-dependent.
         self.preprocess(nx, ny)
         dx, dy = self.domain.getDelta(nx, ny)
         A = np.zeros([self.vector_len, self.vector_len])
@@ -47,6 +56,42 @@ class fdm_solver:
                         A[index, self.grid_to_index[cur_x, cur_y]] += op.coefficient * coeff
         return spsolve(csr_matrix(A), fv + u)
         
+    def time_dependent_solve(self, nt, nx):
+        dx, dt = self.domain.getDelta(nx, nt)
+        result = self._td_get_initial_value(nx)
+        for j in range(1, nt+2):
+            t = j * dt
+            A = np.zeros([nx, nx])
+            fv, u = np.zeros(nx), np.zeros(nx)
+            for i in range(1, nx+1):
+                x = i * dx
+                fv[i] = self.f(x, t)
+                for op in self.diff_op_expression:
+                    for node in op.stencil:
+                        coord, coeff = node
+                        x_offset, t_offset = coord
+                        cur_x, cur_t = x + x_offset, t + t_offset
+                        cur_x_coord, cur_t_coord = self._get_coord_by_offset(dx, dt, cur_x, cur_t)
+                        if self.domain_condition.onBoundary(cur_x_coord, cur_t_coord):
+                            bv = self.domain_condition.getBoundaryValue(cur_x_coord, cur_t_coord)
+                            u[i-1] -= op.coefficient * coeff * bv
+                        elif t_offset < 0: # the value has already been computed in the previous computations
+                            pass
+                        else:
+                            pass
+                            #A[i-1, ] += op.coefficient * coeff
+
+    def _td_get_initial_value(self, nx):
+        """
+        Compute the initial value of the time dependent pde problem
+        """
+        lower_left_x, lower_left_y = self.domain.lower_left_coord
+        upper_right_x = self.domain.upper_right_coord[0]
+        x, y = np.linspace(lower_left_x, upper_right_x, nx+2), np.empty(nx+2)
+        y.fill(lower_left_y)
+        vectorized_getBV = np.vectorize(self.domain_condition.getBoundaryValue)
+        return vectorized_getBV(x, y)
+
     def preprocess(self, nx, ny = 1):
         dx, dy = self.domain.getDelta(nx, ny)
         self.index_to_grid = np.zeros(nx*ny, dtype=(int, 2))

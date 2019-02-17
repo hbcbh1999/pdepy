@@ -85,6 +85,10 @@ class Test(unittest.TestCase):
         expression = expr.diff_operator_expression([a, b])
         self.solver.diff_op_expression = expression
         assert self.solver._all_ops_are_time_dependent() is False
+    
+    def test_td_get_initial_value(self):
+        a = np.array([2, 1.90909091, 1.83333333, 1.76923077, 1.71428571, 1.66666667, 1.625, 1.58823529, 1.55555556, 1.52631579, 1.5])
+        assert max(abs(self.real_solver._td_get_initial_value(9) - a)) < 0.0000001
 
 if __name__ == '__main__':
     unittest.main()
