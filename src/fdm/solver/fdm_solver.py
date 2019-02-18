@@ -14,7 +14,7 @@ class fdm_solver:
         self.grid_to_index = {}
         self.vector_len = 0
     
-    def solve(self, nx, ny = 1, is_time_dependent = False):
+    def solve(self, nx, ny = 1):
         """
         nx is the grid points number in x axis; ny is the symmetry of nx.
         The following grid has nx = 4, ny = 3
@@ -25,7 +25,8 @@ class fdm_solver:
         |_|_|_|_|_|
         """
         # For time dependent PDE, it requires that self.domain is exactly the domain of PDE
-        if is_time_dependent:
+        if self._is_time_dependent():
+            if not self._all_ops_are_time_dependent: raise TypeError
             return self.time_dependent_solve(nx, ny)
         else:
             return self.spatial_solve(nx, ny)
@@ -64,24 +65,31 @@ class fdm_solver:
             for i in range(1, nx+1): # from 1 to nx
                 fv[i-1] = self.f(*self._get_coord_by_offset(dx, dt, i-1, j-1))
                 for op in self.diff_op_expression:
+                    print(op)
                     for node in op.stencil:
                         coord, coeff = node
                         x_offset, t_offset = coord
                         cur_x, cur_t = i + x_offset, j + t_offset
                         cur_x_coord, cur_t_coord = self._get_coord_by_offset(dx, dt, cur_x-1, cur_t-1)
+                        
                         if self.domain_condition.onBoundary(cur_x_coord, cur_t_coord):
                             bv = self.domain_condition.getBoundaryValue(cur_x_coord, cur_t_coord)
                             u[i-1] -= op.coefficient * coeff * bv
+                            print('a', op.coefficient * coeff * bv, cur_x_coord, cur_t_coord, 'bv', bv)
                         elif t_offset < 0: # the value has already been computed in the previous computations
-                            u[i-1] += op.coefficient * coeff * A[cur_t, cur_x-1]
+                            u[i-1] -= op.coefficient * coeff * result[cur_t-1, cur_x-1]
+                            print('b', op.coefficient * coeff * result[cur_t-1, cur_x-1],result[cur_t-1, cur_x-1])
                         else:
                             A[i-1, cur_x-1] += op.coefficient * coeff
+                    print()
+            print(A, fv, u)
             row = spsolve(csr_matrix(A), fv + u)
             x1, y = self._get_coord_by_offset(dx, dt, -1, j-1)
             x2 = self._get_coord_by_offset(dx, dt, nx, j-1)[0]
             f1, f2 = self.domain_condition.getBoundaryValue(x1, y), self.domain_condition.getBoundaryValue(x2, y)
             row = np.concatenate([[f1], row, [f2]])
             result = np.vstack([result, row])
+            print(result)
         return result
 
     def _td_get_initial_value(self, nx):
@@ -92,8 +100,10 @@ class fdm_solver:
         upper_right_x = self.domain.upper_right_coord[0]
         x, y = np.linspace(lower_left_x, upper_right_x, nx+2), np.empty(nx+2)
         y.fill(lower_left_y)
-        vectorized_getBV = np.vectorize(self.domain_condition.getBoundaryValue)
-        return vectorized_getBV(x, y).reshape(1, nx+2)
+        result = np.zeros(nx+2)
+        for i in range(nx+2):
+            result[i] = self.domain_condition.getBoundaryValue(x[i], y[i])
+        return result.reshape(1, nx+2)
 
     def preprocess(self, nx, ny = 1):
         dx, dy = self.domain.getDelta(nx, ny)
@@ -118,14 +128,14 @@ class fdm_solver:
             return False
         return True
     
-    # def _is_time_dependent(self):
-    #     for op in self.diff_op_expression:
-    #         if isinstance(op, td.time_dependent_operator):
-    #             return True
-    #     return False
+    def _is_time_dependent(self):
+        for op in self.diff_op_expression:
+            if op.is_time_dependent:
+                return True
+        return False
     
-    # def _all_ops_are_time_dependent(self):
-    #     for op in self.diff_op_expression:
-    #         if not isinstance(op, td.time_dependent_operator):
-    #             return False
-    #     return True
+    def _all_ops_are_time_dependent(self):
+        for op in self.diff_op_expression:
+            if not op.is_time_dependent:
+                return False
+        return True
