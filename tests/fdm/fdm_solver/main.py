@@ -13,6 +13,7 @@ import dirichlet_rectangle as dr
 import domain as dm
 import unittest
 import numpy as np
+import math
 
 class Test(unittest.TestCase):
     def setUp(self):
@@ -71,24 +72,46 @@ class Test(unittest.TestCase):
         assert self.solver._has_getNearestPoint(2) == False
         assert self.solver2._has_getNearestPoint(2) == True
 
-    def test_is_time_dependent(self):
-        a = ddt.ddt(0.1)
-        b = td_d2dx.td_d2dx(0.1)
-        expression = expr.diff_operator_expression([a, b])
-        self.solver.diff_op_expression = expression
-        assert self.solver._is_time_dependent() is True
-        assert self.solver._all_ops_are_time_dependent() is True
+    # def test_is_time_dependent(self):
+    #     a = ddt.ddt(0.1)
+    #     b = td_d2dx.td_d2dx(0.1)
+    #     expression = expr.diff_operator_expression([a, b])
+    #     self.solver.diff_op_expression = expression
+    #     assert self.solver._is_time_dependent() is True
+    #     assert self.solver._all_ops_are_time_dependent() is True
         
-    def test_all_ops_are_time_dependent(self):
-        a = ddt.ddt(0.1)
-        b = ddx.ddx(0.1)
-        expression = expr.diff_operator_expression([a, b])
-        self.solver.diff_op_expression = expression
-        assert self.solver._all_ops_are_time_dependent() is False
+    # def test_all_ops_are_time_dependent(self):
+    #     a = ddt.ddt(0.1)
+    #     b = ddx.ddx(0.1)
+    #     expression = expr.diff_operator_expression([a, b])
+    #     self.solver.diff_op_expression = expression
+    #     assert self.solver._all_ops_are_time_dependent() is False
     
     def test_td_get_initial_value(self):
         a = np.array([2, 1.90909091, 1.83333333, 1.76923077, 1.71428571, 1.66666667, 1.625, 1.58823529, 1.55555556, 1.52631579, 1.5])
-        assert max(abs(self.real_solver._td_get_initial_value(9) - a)) < 0.0000001
+        assert max(abs(np.squeeze(np.asarray(self.real_solver._td_get_initial_value(9)) - a))) < 0.0000001
+
+    def test_td_solver(self):
+        td_domain = dm.domain(np.array([0, 0]), np.array([1, 1]))
+        td_inDomain = lambda x, y: 0 < x < 1 and 0 < y < 1
+        td_onBoundary = lambda x, y: abs(x-1) < np.spacing(1) or abs(x) < np.spacing(1) \
+            or abs(y) < np.spacing(1)
+        def td_getBV(x, y):
+            if abs(x) < np.spacing(1) or abs(x-1) < np.spacing(1):
+                return 0
+            else:
+                return 6*math.sin(math.pi*x)
+        f_s = lambda x, y: 0
+        dirichlet = dr.dirichlet_rectangular_bc(td_inDomain, td_onBoundary, td_getBV, td_domain)
+        solver = fdm.fdm_solver([], f_s, dirichlet)
+        for n in [9]:
+            dx, dt = 1/(n+1), 1/(n+1)
+            a = ddt.ddt(dt)
+            b = td_d2dx.td_d2dx(dx, coefficient = -1)
+            expression = expr.diff_operator_expression([a, b])
+            solver.diff_op_expression = expression
+            #solver.solve(n, n, True)
+            print(solver.solve(n, n, True))
 
 if __name__ == '__main__':
     unittest.main()
