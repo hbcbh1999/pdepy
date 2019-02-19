@@ -41,6 +41,7 @@ class fdm_solver:
         for index in range(self.vector_len):
             x, y = self.index_to_grid[index]
             fv[index] = self.f(*self._get_coord_by_offset(dx, dy, x, y))
+            x_coord, y_coord = self._get_coord_by_offset(dx, dy, x, y)
             for op in self.diff_op_expression:
                 history_u, history_A = [], [] # record operations for each operator in order to revert back
                 for node in op.stencil:
@@ -58,14 +59,34 @@ class fdm_solver:
                         if x_offset != 0:
                             direction = Direction.POSITIVE if x_offset > 0 else Direction.NEGATIVE
                             bx_coord, by_coord = self.domain_condition.getNearestPoint[0](cur_x_coord, cur_y_coord)
-                            tau = abs(bx_coord - cur_x_coord) / dx
+                            tau = abs(bx_coord - x_coord) / dx
                             irregular_stencil = op.getIrregularStencil(dx, tau, direction)
-                            for new_node in irregular_stencil:
-                                pass
-                                # coord, coeff = new_node
-                                # x_offset, y_offset = coord
-                                # cur_x, cur_y = x + x_offset, y + y_offset
-                                # cur_x_coord, cur_y_coord = self._get_coord_by_offset(dx, dy, cur_x, cur_y)
+                            for irregular_node in irregular_stencil:
+                                x_offset, y_offset = irregular_node.offset
+                                cur_x, cur_y = x + x_offset, y + y_offset
+                                cur_x_coord, cur_y_coord = self._get_coord_by_offset(dx, dy, cur_x, cur_y)
+                                if irregular_node.flawed:
+                                    bv = self.domain_condition.getBoundaryValue(cur_x_coord, cur_y_coord)
+                                    u[index] -= op.coefficient * irregular_node.coefficient * bv
+                                else:
+                                    A[index, self.grid_to_index[cur_x, cur_y]] += op.coefficient * irregular_node.coefficient
+                        elif y_offset != 0:
+                            direction = Direction.POSITIVE if y_offset > 0 else Direction.NEGATIVE
+                            bx_coord, by_coord = self.domain_condition.getNearestPoint[1](cur_x_coord, cur_y_coord)
+                            tau = abs(by_coord - y_coord) / dy
+                            irregular_stencil = op.getIrregularStencil(dy, tau, direction)
+                            for irregular_node in irregular_stencil:
+                                x_offset, y_offset = irregular_node.offset
+                                cur_x, cur_y = x + x_offset, y + y_offset
+                                cur_x_coord, cur_y_coord = self._get_coord_by_offset(dx, dy, cur_x, cur_y)
+                                if irregular_node.flawed:
+                                    bv = self.domain_condition.getBoundaryValue(cur_x_coord, cur_y_coord)
+                                    u[index] -= op.coefficient * irregular_node.coefficient * bv
+                                else:
+                                    A[index, self.grid_to_index[cur_x, cur_y]] += op.coefficient * irregular_node.coefficient
+                        else:
+                            raise TypeError
+                        break
                     else:
                         A[index, self.grid_to_index[cur_x, cur_y]] += op.coefficient * coeff
                         history_A.append((index, self.grid_to_index[cur_x, cur_y], -op.coefficient * coeff))

@@ -3,6 +3,12 @@ class Direction(Enum):
     POSITIVE = 1
     NEGATIVE = -1
 
+class irregular_stencil_node(object):
+    def __init__(self, offset, coefficient, flawed = False):
+        self.offset = offset
+        self.coefficient = coefficient
+        self.flawed = flawed
+
 class diff_operator(object):
     def __init__(self, stencil, coefficient = 1, is_time_dependent = False):
         # a list of tuple whose first element is relative position of node in the stencil, 
