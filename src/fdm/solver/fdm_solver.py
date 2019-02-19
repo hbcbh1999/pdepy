@@ -1,6 +1,7 @@
 import sys, os
 sys.path.append(os.path.dirname(os.path.abspath(__file__))+'/../../util/diff_operators')
 import core.time_dependent_op as td
+from core.diff_op import Direction
 import numpy as np
 from scipy.sparse import csr_matrix
 from scipy.sparse.linalg import spsolve
@@ -41,6 +42,7 @@ class fdm_solver:
             x, y = self.index_to_grid[index]
             fv[index] = self.f(*self._get_coord_by_offset(dx, dy, x, y))
             for op in self.diff_op_expression:
+                history_u, history_A = [], [] # record operations for each operator in order to revert back
                 for node in op.stencil:
                     coord, coeff = node
                     x_offset, y_offset = coord
@@ -49,11 +51,24 @@ class fdm_solver:
                     if self.domain_condition.onBoundary(cur_x_coord, cur_y_coord):
                         bv = self.domain_condition.getBoundaryValue(cur_x_coord, cur_y_coord)
                         u[index] -= op.coefficient * coeff * bv
+                        history_u.append((index, op.coefficient * coeff * bv))
                     elif not self.domain_condition.inDomain(cur_x_coord, cur_y_coord):
                         if not self._has_getNearestPoint(ny): raise NotImplementedError
-                        pass
+                        self._op_revert_back(history_A, history_u, A, u)
+                        if x_offset != 0:
+                            direction = Direction.POSITIVE if x_offset > 0 else Direction.NEGATIVE
+                            bx_coord, by_coord = self.domain_condition.getNearestPoint[0](cur_x_coord, cur_y_coord)
+                            tau = abs(bx_coord - cur_x_coord) / dx
+                            irregular_stencil = op.getIrregularStencil(dx, tau, direction)
+                            for new_node in irregular_stencil:
+                                pass
+                                # coord, coeff = new_node
+                                # x_offset, y_offset = coord
+                                # cur_x, cur_y = x + x_offset, y + y_offset
+                                # cur_x_coord, cur_y_coord = self._get_coord_by_offset(dx, dy, cur_x, cur_y)
                     else:
                         A[index, self.grid_to_index[cur_x, cur_y]] += op.coefficient * coeff
+                        history_A.append((index, self.grid_to_index[cur_x, cur_y], -op.coefficient * coeff))
         return spsolve(csr_matrix(A), fv + u)
         
     def time_dependent_solve(self, nx, nt):
@@ -92,6 +107,12 @@ class fdm_solver:
             result = np.vstack([result, row])
             # print(result)
         return result
+
+    def _op_revert_back(self, history_A, history_u, A, u):
+        for c_x, c_y, v in history_A:
+            A[c_x, c_y] += v
+        for index, v in history_u:
+            u[index] += v
 
     def _td_get_initial_value(self, nx):
         """

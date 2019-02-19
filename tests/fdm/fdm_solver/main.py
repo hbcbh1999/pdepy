@@ -75,6 +75,15 @@ class Test(unittest.TestCase):
     def test_td_get_initial_value(self):
         a = np.array([2, 1.90909091, 1.83333333, 1.76923077, 1.71428571, 1.66666667, 1.625, 1.58823529, 1.55555556, 1.52631579, 1.5])
         assert max(abs(np.squeeze(np.asarray(self.real_solver._td_get_initial_value(9)) - a))) < 0.0000001
+    
+    def test_op_revert_back(self):
+        A = np.zeros([3, 3])
+        u = np.zeros(3)
+        history_A = [(1, 1, -1)]
+        history_u = [(0, 1)]
+        self.solver._op_revert_back(history_A, history_u, A, u)
+        assert A[1, 1] == -1
+        assert u[0] == 1
 
 if __name__ == '__main__':
     unittest.main()
