@@ -99,10 +99,8 @@ class fdm_solver:
             A = np.zeros([nx, nx])
             fv, u = np.zeros(nx), np.zeros(nx)
             for i in range(1, nx+1): # from 1 to nx
-                # print('x coord', i)
                 fv[i-1] = self.f(*self._get_coord_by_offset(dx, dt, i-1, j-1))
                 for op in self.diff_op_expression:
-                    # print(op)
                     for node in op.stencil:
                         coord, coeff = node
                         x_offset, t_offset = coord
@@ -111,22 +109,16 @@ class fdm_solver:
                         if self.domain_condition.onBoundary(cur_x_coord, cur_t_coord):
                             bv = self.domain_condition.getBoundaryValue(cur_x_coord, cur_t_coord)
                             u[i-1] -= op.coefficient * coeff * bv
-                            # print('a', op.coefficient * coeff * bv, cur_x_coord, cur_t_coord, 'bv', bv)
                         elif t_offset < 0: # the value has already been computed in the previous computations
                             u[i-1] -= op.coefficient * coeff * result[cur_t, cur_x]
-                            # print('b', op.coefficient * coeff * result[cur_t, cur_x],result[cur_t, cur_x])
                         else:
                             A[i-1, cur_x-1] += op.coefficient * coeff
-                            # print('c', op.coefficient * coeff)
-                    # print()
-            # print(A, fv, u)
             row = spsolve(csr_matrix(A), fv + u)
             x1, y = self._get_coord_by_offset(dx, dt, -1, j-1)
             x2 = self._get_coord_by_offset(dx, dt, nx, j-1)[0]
             f1, f2 = self.domain_condition.getBoundaryValue(x1, y), self.domain_condition.getBoundaryValue(x2, y)
             row = np.concatenate([[f1], row, [f2]])
             result = np.vstack([result, row])
-            # print(result)
         return result
 
     def _op_revert_back(self, history_A, history_u, A, u):

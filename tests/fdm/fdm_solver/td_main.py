@@ -25,8 +25,9 @@ class Test(unittest.TestCase):
             if abs(x) < np.spacing(1) or abs(x-1) < np.spacing(1):
                 return 0
             else:
-                return 6*math.sin(math.pi*x) + 3*math.cos(math.pi*x) - 3
-                # return x * math.sin(5*math.pi*x)
+                #return math.sin(math.pi*x)
+                #return 6*math.sin(math.pi*x) + 3*math.cos(2*math.pi*x) - 3
+                return 6*x * math.sin(5*math.pi*x)
         f_s = lambda x, y: 0
         dirichlet = dr.dirichlet_rectangular_bc(td_inDomain, td_onBoundary, td_getBV, td_domain)
         self.solver = fdm.fdm_solver([], f_s, dirichlet)
@@ -47,14 +48,14 @@ class Test(unittest.TestCase):
         assert self.solver._all_ops_are_time_dependent() is False
     
     def test_td_solver(self):
-        for n in [5]:
-            dx, dt = 1/(n+1), 1/(n+1)
+        for n in [50]:
+            dx, dt = 1/(n+1), 1/(n*5+1)
             a = ddt.ddt(dt)
             b = td_d2dx.td_d2dx(dx, coefficient = -1)
             expression = expr.diff_operator_expression([a, b])
             self.solver.diff_op_expression = expression
             #self.solver.solve(n, n)
-            print(self.solver.solve(n, n*5).tolist())
+            print(self.solver.solve(n, n*25).tolist())
 
     def plot_time_dependent_function(self):
         # Uncomment the following code if GUI is supported
