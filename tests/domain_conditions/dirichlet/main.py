@@ -1,6 +1,6 @@
 import sys, os
 sys.path.append(os.path.dirname(os.path.abspath(__file__))+"/../../../src/util/domain_conditions/impl/dirichlet")
-import dirichlet_rectangle as dr
+import dirichlet_bc as dr
 sys.path.append(os.path.dirname(os.path.abspath(__file__))+"/../../../src/util/domain_conditions/core/domain")
 import domain as dm
 import numpy as np
@@ -15,7 +15,7 @@ class Test(unittest.TestCase):
         self.domain = dm.domain(np.array([-1, -1]), np.array([1, 1]))
 
     def test_init(self):
-        a = dr.dirichlet_rectangular_bc(self.inDomain, self.onBoundary, self.getBoundaryValue, self.domain)
+        a = dr.dirichlet_bc(self.inDomain, self.onBoundary, self.getBoundaryValue, self.domain)
         assert (a.domain.lower_left_coord == np.array([-1, -1])).all()
 
 if __name__ == '__main__':

@@ -5,3 +5,9 @@ import numpy as np
 class I(diff_op.diff_operator):
     def __init__(self, coefficient = 1):
         super().__init__([((0, 0), 1)], coefficient)
+
+    def get_implicit_stencil(self):
+        return self.stencil
+    
+    def get_explicit_stencil(self):
+        return self.stencil

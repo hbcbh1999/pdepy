@@ -9,7 +9,7 @@ import diff_operators.impl.ddx as ddx, diff_operators.impl.ddy as ddy, diff_oper
 import diff_operators.core.diff_op as diff_op
 sys.path.append(os.path.dirname(os.path.abspath(__file__))+"/../../../src/util/domain_conditions/core/domain")
 sys.path.append(os.path.dirname(os.path.abspath(__file__))+"/../../../src/util/domain_conditions/impl/dirichlet")
-import dirichlet_rectangle as dr
+import dirichlet_bc as dr
 import domain as dm
 import unittest
 import numpy as np
@@ -29,23 +29,22 @@ class Test(unittest.TestCase):
                 #return 6*math.sin(math.pi*x) + 3*math.cos(2*math.pi*x) - 3
                 return 6*x * math.sin(5*math.pi*x)
         f_s = lambda x, y: 0
-        dirichlet = dr.dirichlet_rectangular_bc(td_inDomain, td_onBoundary, td_getBV, td_domain)
+        dirichlet = dr.dirichlet_bc(td_inDomain, td_onBoundary, td_getBV, td_domain)
         self.solver = fdm.fdm_solver([], f_s, dirichlet)
 
     def test_is_time_dependent(self):
         a = ddt.ddt(0.1)
         b = td_d2dx.td_d2dx(0.1)
         expression = expr.diff_operator_expression([a, b])
-        self.solver.diff_op_expression = expression
-        assert self.solver._is_time_dependent() is True
-        assert self.solver._all_ops_are_time_dependent() is True
+        assert expression.is_time_dependent() is True
+        assert expression.all_ops_are_time_dependent() is True
         
     def test_all_ops_are_time_dependent(self):
         a = ddt.ddt(0.1)
         b = ddx.ddx(0.1)
         expression = expr.diff_operator_expression([a, b])
-        self.solver.diff_op_expression = expression
-        assert self.solver._all_ops_are_time_dependent() is False
+        assert expression.all_ops_are_time_dependent() is False
+        assert expression.get_largest_coefficient() == 1
     
     def test_td_solver(self):
         for n in [50]:

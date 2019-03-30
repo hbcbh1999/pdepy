@@ -9,7 +9,7 @@ import diff_operators.impl.ddx as ddx, diff_operators.impl.ddy as ddy, diff_oper
 import diff_operators.core.diff_op as diff_op
 sys.path.append(os.path.dirname(os.path.abspath(__file__))+"/../../../src/util/domain_conditions/core/domain")
 sys.path.append(os.path.dirname(os.path.abspath(__file__))+"/../../../src/util/domain_conditions/impl/dirichlet")
-import dirichlet_rectangle as dr
+import dirichlet_bc as dr
 import domain as dm
 import unittest
 import numpy as np
@@ -24,8 +24,8 @@ class Test(unittest.TestCase):
         onBoundary = lambda x, y: abs(x-1) < np.spacing(1) or abs(x+1) < np.spacing(1) \
             or abs(y-1) < np.spacing(1) or abs(y+1) < np.spacing(1)
         getBoundaryValue = lambda x, y: 1
-        self.diri = dr.dirichlet_rectangular_bc(inDomain, onBoundary, getBoundaryValue, domain)
-        self.diri2 = dr.dirichlet_rectangular_bc(inDomain, onBoundary, getBoundaryValue, domain, (lambda x, y: 1, lambda x, y: 2))
+        self.diri = dr.dirichlet_bc(inDomain, onBoundary, getBoundaryValue, domain)
+        self.diri2 = dr.dirichlet_bc(inDomain, onBoundary, getBoundaryValue, domain, (lambda x, y: 1, lambda x, y: 2))
         self.solver = fdm.fdm_solver(self.expression, lambda x, y: 1, self.diri)
         self.solver2 = fdm.fdm_solver(self.expression, lambda x, y: 1, self.diri2)
 
@@ -35,7 +35,7 @@ class Test(unittest.TestCase):
             or abs(y-1) < np.spacing(1) or abs(y) < np.spacing(1)
         getBoundaryValue_s = lambda x, y: 1/(1+x) + 1/(1+y)
         f_s = lambda x, y: 2/(1+x)**3 + 2/(1+y)**3
-        self.dirichlet = dr.dirichlet_rectangular_bc(inDomain_s, onBoundary_s, getBoundaryValue_s, domain_s)
+        self.dirichlet = dr.dirichlet_bc(inDomain_s, onBoundary_s, getBoundaryValue_s, domain_s)
         self.real_solver = fdm.fdm_solver([], f_s, self.dirichlet)
 
     def test_solve(self):

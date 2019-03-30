@@ -5,6 +5,7 @@ from core.diff_op import Direction
 import numpy as np
 from scipy.sparse import csr_matrix
 from scipy.sparse.linalg import spsolve
+from math import ceil
 class fdm_solver:
     def __init__(self, diff_op_expression, f, domain_condition):
         self.diff_op_expression = diff_op_expression
@@ -26,9 +27,9 @@ class fdm_solver:
         |_|_|_|_|_|
         """
         # For time dependent PDE, it requires that self.domain is exactly the domain of PDE
-        if self._is_time_dependent():
-            if not self._all_ops_are_time_dependent: raise TypeError
-            return self.time_dependent_solve(nx, ny)
+        if self.diff_op_expression.is_time_dependent():
+            if not self.diff_op_expression.all_ops_are_time_dependent: raise TypeError
+            return self.time_dependent_implicit_solve(nx, ny)
         else:
             return self.spatial_solve(nx, ny)
     
@@ -92,7 +93,7 @@ class fdm_solver:
                         history_A.append((index, self.grid_to_index[cur_x, cur_y], -op.coefficient * coeff))
         return spsolve(csr_matrix(A), fv + u)
         
-    def time_dependent_solve(self, nx, nt):
+    def time_dependent_implicit_solve(self, nx, nt):
         dx, dt = self.domain.getDelta(nx, nt)
         result = self._td_get_initial_value(nx)
         for j in range(1, nt+1):
@@ -121,11 +122,23 @@ class fdm_solver:
             result = np.vstack([result, row])
         return result
 
+    def time_dependent_explicit_solve(self, nx, ny, nt):
+        if self.domain_condition.total_time is None: raise NotImplementedError
+        dt = self.domain_condition.total_time / (nt+1)
+        dx, dy = self.domain.getDelta(nx, ny)
+        max_coefficient = self.diff_op_expression.get_largest_coefficient()
+        if dt > (dx*dy)**2/(2*max_coefficient*(dx**2+dy**2)):
+            recommended_nt = ceil(self.domain_condition.total_time/((dx*dy)**2/(2*max_coefficient*(dx**2+dy**2))))
+            sys.stderr.write(f"Since the program uses explicit method to solve 2D time-dependent PDE, it's recommended to set nt to be larger than {recommended_nt}\n")
+        
+
+
     def _op_revert_back(self, history_A, history_u, A, u):
         for c_x, c_y, v in history_A:
             A[c_x, c_y] += v
         for index, v in history_u:
             u[index] += v
+
 
     def _td_get_initial_value(self, nx):
         """
@@ -161,16 +174,4 @@ class fdm_solver:
             return False
         elif self.domain_condition.getNearestPoint[1] is None and ny != 1:
             return False
-        return True
-    
-    def _is_time_dependent(self):
-        for op in self.diff_op_expression:
-            if op.is_time_dependent:
-                return True
-        return False
-    
-    def _all_ops_are_time_dependent(self):
-        for op in self.diff_op_expression:
-            if not op.is_time_dependent:
-                return False
         return True
