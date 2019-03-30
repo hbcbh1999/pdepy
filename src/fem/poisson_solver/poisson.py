@@ -8,6 +8,7 @@ class poisson_solver:
         self.domain_condition = domain_condition
         self.domain = domain_condition.domain
         self.tri = None
+        self.points = None
 
     def solve(self, nx, ny):
         self.preprocess(nx, ny)
