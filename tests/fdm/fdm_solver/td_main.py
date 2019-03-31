@@ -54,7 +54,9 @@ class Test(unittest.TestCase):
             expression = expr.diff_operator_expression([a, b])
             self.solver.diff_op_expression = expression
             #self.solver.solve(n, n)
-            print(self.solver.solve(n, n*25).tolist())
+            time, result = self.solver.solve(n, n*25)
+            print(time, result)
+            assert len(time) == len(result)
 
     def plot_time_dependent_function(self):
         # Uncomment the following code if GUI is supported
