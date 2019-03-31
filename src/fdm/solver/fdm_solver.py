@@ -130,7 +130,10 @@ class fdm_solver:
         if dt > (dx*dy)**2/(2*max_coefficient*(dx**2+dy**2)):
             recommended_nt = ceil(self.domain_condition.total_time/((dx*dy)**2/(2*max_coefficient*(dx**2+dy**2))))
             sys.stderr.write(f"Since the program uses explicit method to solve 2D time-dependent PDE, it's recommended to set nt to be larger than {recommended_nt}\n")
+        last = self._td_get_2d_initial_value(nx, ny)
+        result = [last]
         
+
 
 
     def _op_revert_back(self, history_A, history_u, A, u):
@@ -139,6 +142,13 @@ class fdm_solver:
         for index, v in history_u:
             u[index] += v
 
+    def _td_get_2d_initial_value(self, nx, ny):
+        lower_left_x, lower_left_y = self.domain.lower_left_coord
+        upper_right_x, upper_right_y = self.domain.upper_right_coord
+        x, y = np.linspace(lower_left_x, upper_right_x, nx+2), np.linspace(lower_left_y, upper_right_y, ny+2)
+        X, Y = np.meshgrid(x, y)
+        vec_getBoundaryValue = np.vectorize(self.domain_condition.getBoundaryValue)
+        return vec_getBoundaryValue(X, Y)
 
     def _td_get_initial_value(self, nx):
         """
