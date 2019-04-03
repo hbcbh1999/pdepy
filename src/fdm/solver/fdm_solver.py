@@ -129,7 +129,6 @@ class fdm_solver:
         return time, result
 
     def time_dependent_explicit_solve(self, nx, ny, nt):
-        print(1)
         if self.domain_condition.total_time is None: raise NotImplementedError
         dx, dy = self.domain.getDelta(nx, ny)
         max_coefficient = self.diff_op_expression.get_largest_coefficient()
@@ -147,17 +146,14 @@ class fdm_solver:
             for y_grid_index in range(0, ny+2):
                 for x_grid_index in range(0, nx+2):
                     x, y = X[x_grid_index], Y[y_grid_index]
-                    # print('c', x, y)
                     if self.domain_condition.onBoundary(x, y):
                         current[y_grid_index][x_grid_index] = self.domain_condition.getBoundaryValue(x, y)
                     else:
-                        # print('a', x_grid_index, y_grid_index)
                         left_coeff, right_const = 0, 0
                         for op in self.diff_op_expression:
                             for node in op.get_explicit_stencil():
                                 coord, coeff = node
                                 cur_x_index, cur_y_index = x_grid_index + coord[0], y_grid_index + coord[1]
-                                # print('b', cur_x_index, cur_y_index, op.get_explicit_stencil())
                                 op_type = coord[2]
                                 if op_type == -1:
                                     right_const -= op.coefficient * coeff * last[cur_y_index][cur_x_index]

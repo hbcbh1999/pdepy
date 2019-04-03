@@ -25,33 +25,30 @@ class Test(unittest.TestCase):
         def td_getBV(x, y):
             if abs(x) < np.spacing(1) or abs(x-1) < np.spacing(1) or abs(y) < np.spacing(1) or abs(y-1) < np.spacing(1):
                 return 0
-            elif y <= 1/2 and (y <= x or y <= -x+1):
-                return 2*y
-            elif x <= 1/2 and (y >= x or y <= -x+1):
-                return 2*x
-            elif x >= 1/2 and (y <= x or y >= -x+1):
-                return 2-2*x
+            elif y <= 1/2 and (y <= x and y <= -x+1):
+                return 20*y
+            elif x <= 1/2 and (y >= x and y <= -x+1):
+                return 20*x
+            elif x >= 1/2 and (y <= x and y >= -x+1):
+                return 20-20*x
             else:
-                return 2-2*y
+                return 20-20*y
         f_s = lambda x, y: 0
         dirichlet = dr.dirichlet_rectangular_bc(td_inDomain, td_onBoundary, td_getBV, td_domain, 2)
         self.solver = fdm.fdm_solver([], f_s, dirichlet)
 
     
     def test_2d_td_solver(self):
-        for n in [50]:
-            dx, dy, dt = 1/(n+1), 1/(n+1), 1/(n+1)
+        for n in [9]:
+            dx, dy, dt = 1/(n+1), 1/(n+1), 1/800
             a = ddt.ddt(dt)
             b = td_d2dx.td_d2dx(dx, coefficient = -1)
             c = td_d2dy.td_d2dy(dy, coefficient = -1)
             expression = expr.diff_operator_expression([a, b, c])
             self.solver.diff_op_expression = expression
-            #self.solver.solve(n, n)
-            time, result = self.solver.solve(n, n, 2*(n+1))
+            time, result = self.solver.solve(n, n, 799)
             print(time, result)
             assert len(time) == len(result)
-            print(result[0])
-            print(result[1])
 
 if __name__ == '__main__':
     unittest.main()
