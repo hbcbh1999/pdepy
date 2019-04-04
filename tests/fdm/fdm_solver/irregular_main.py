@@ -42,21 +42,21 @@ class Test(unittest.TestCase):
     def test_solve_irregular(self):
         error = []
         for n in [9, 19, 39, 79]:
-            dx, dy = 2/(n+1), 2/(n+1)
+            dx, dy = 1/(n+1), 1/(n+1)
             a = d2dx.d2dx(dx)
             b = d2dy.d2dy(dy)
             expression = expr.diff_operator_expression([a, b])
             self.solver.diff_op_expression = expression
-            u = self.solver.solve(n, n)
+            u = self.solver.solve(2*n+1, 2*n+1)
             real_function = lambda x, y: (x**2+y**2)**2
             real_u = np.zeros(self.solver.vector_len)
             for i in range(self.solver.vector_len):
                 real_u[i] = real_function(*self.solver._get_coord_by_offset(dx, dy, *self.solver.index_to_grid[i]))
             error.append(max(abs(u-real_u)))
-        assert error[0] < 0.0361
-        assert error[1] < 0.0094
-        assert error[2] < 0.00241
-        assert error[3] < 0.000612
+        assert error[0] < 0.00996
+        assert error[1] < 0.002497
+        assert error[2] < 0.0006248
+        assert error[3] < 0.000157
 
 if __name__ == '__main__':
     unittest.main()

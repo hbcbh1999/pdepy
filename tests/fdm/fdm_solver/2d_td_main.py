@@ -42,8 +42,8 @@ class Test(unittest.TestCase):
         for n in [9]:
             dx, dy, dt = 1/(n+1), 1/(n+1), 1/800
             a = ddt.ddt(dt)
-            b = td_d2dx.td_d2dx(dx, coefficient = -1)
-            c = td_d2dy.td_d2dy(dy, coefficient = -1)
+            b = td_d2dx.td_d2dx(dx, coefficient = lambda x, y: -1)
+            c = td_d2dy.td_d2dy(dy, coefficient = lambda x, y: -1)
             expression = expr.diff_operator_expression([a, b, c])
             self.solver.diff_op_expression = expression
             time, result = self.solver.solve(n, n, 799)

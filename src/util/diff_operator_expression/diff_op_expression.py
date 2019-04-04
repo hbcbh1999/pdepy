@@ -44,7 +44,7 @@ class diff_operator_expression:
     def get_largest_coefficient(self):
         m = 0
         for op in self.expression:
-            m = max(abs(op.coefficient), m)
+            m = max(abs(op.coefficient(0, 0)), m)
         return m
 
     def __len__(self):

@@ -50,7 +50,7 @@ class Test(unittest.TestCase):
         for n in [50]:
             dx, dt = 1/(n+1), 1/(n*5+1)
             a = ddt.ddt(dt)
-            b = td_d2dx.td_d2dx(dx, coefficient = -1)
+            b = td_d2dx.td_d2dx(dx, coefficient = lambda x, y: -1)
             expression = expr.diff_operator_expression([a, b])
             self.solver.diff_op_expression = expression
             #self.solver.solve(n, n)

@@ -56,8 +56,8 @@ class fdm_solver:
                     cur_x_coord, cur_y_coord = self._get_coord_by_offset(dx, dy, cur_x, cur_y)
                     if self.domain_condition.onBoundary(cur_x_coord, cur_y_coord):
                         bv = self.domain_condition.getBoundaryValue(cur_x_coord, cur_y_coord)
-                        u[index] -= op.coefficient * coeff * bv
-                        history_u.append((index, op.coefficient * coeff * bv))
+                        u[index] -= op.coefficient(cur_x_coord, cur_y_coord) * coeff * bv
+                        history_u.append((index, op.coefficient(cur_x_coord, cur_y_coord) * coeff * bv))
                     elif not self.domain_condition.inDomain(cur_x_coord, cur_y_coord):
                         if not self._has_getNearestPoint(ny): raise NotImplementedError
                         self._op_revert_back(history_A, history_u, A, u)
@@ -72,9 +72,9 @@ class fdm_solver:
                                 cur_x_coord, cur_y_coord = self._get_coord_by_offset(dx, dy, cur_x, cur_y)
                                 if irregular_node.flawed:
                                     bv = self.domain_condition.getBoundaryValue(cur_x_coord, cur_y_coord)
-                                    u[index] -= op.coefficient * irregular_node.coefficient * bv
+                                    u[index] -= op.coefficient(cur_x_coord, cur_y_coord) * irregular_node.coefficient * bv
                                 else:
-                                    A[index, self.grid_to_index[cur_x, cur_y]] += op.coefficient * irregular_node.coefficient
+                                    A[index, self.grid_to_index[cur_x, cur_y]] += op.coefficient(cur_x_coord, cur_y_coord) * irregular_node.coefficient
                         elif y_offset != 0:
                             direction = Direction.POSITIVE if y_offset > 0 else Direction.NEGATIVE
                             bx_coord, by_coord = self.domain_condition.getNearestPoint[1](cur_x_coord, cur_y_coord)
@@ -86,15 +86,15 @@ class fdm_solver:
                                 cur_x_coord, cur_y_coord = self._get_coord_by_offset(dx, dy, cur_x, cur_y)
                                 if irregular_node.flawed:
                                     bv = self.domain_condition.getBoundaryValue(cur_x_coord, cur_y_coord)
-                                    u[index] -= op.coefficient * irregular_node.coefficient * bv
+                                    u[index] -= op.coefficient(cur_x_coord, cur_y_coord) * irregular_node.coefficient * bv
                                 else:
-                                    A[index, self.grid_to_index[cur_x, cur_y]] += op.coefficient * irregular_node.coefficient
+                                    A[index, self.grid_to_index[cur_x, cur_y]] += op.coefficient(cur_x_coord, cur_y_coord) * irregular_node.coefficient(cur_x_coord, cur_y_coord)
                         else:
                             raise TypeError
                         break
                     else:
-                        A[index, self.grid_to_index[cur_x, cur_y]] += op.coefficient * coeff
-                        history_A.append((index, self.grid_to_index[cur_x, cur_y], -op.coefficient * coeff))
+                        A[index, self.grid_to_index[cur_x, cur_y]] += op.coefficient(cur_x_coord, cur_y_coord) * coeff
+                        history_A.append((index, self.grid_to_index[cur_x, cur_y], -op.coefficient(cur_x_coord, cur_y_coord) * coeff))
         return spsolve(csr_matrix(A), fv + u)
         
     def time_dependent_implicit_solve(self, nx, nt):
@@ -114,11 +114,11 @@ class fdm_solver:
                         cur_x_coord, cur_t_coord = self._get_coord_by_offset(dx, dt, cur_x-1, cur_t-1)
                         if self.domain_condition.onBoundary(cur_x_coord, cur_t_coord):
                             bv = self.domain_condition.getBoundaryValue(cur_x_coord, cur_t_coord)
-                            u[i-1] -= op.coefficient * coeff * bv
+                            u[i-1] -= op.coefficient(cur_x_coord, cur_t_coord) * coeff * bv
                         elif t_offset < 0: # the value has already been computed in the previous computations
-                            u[i-1] -= op.coefficient * coeff * result[cur_t, cur_x]
+                            u[i-1] -= op.coefficient(cur_x_coord, cur_t_coord) * coeff * result[cur_t, cur_x]
                         else:
-                            A[i-1, cur_x-1] += op.coefficient * coeff
+                            A[i-1, cur_x-1] += op.coefficient(cur_x_coord, cur_t_coord) * coeff
             row = spsolve(csr_matrix(A), fv + u)
             x1, y = self._get_coord_by_offset(dx, dt, -1, j-1)
             x2 = self._get_coord_by_offset(dx, dt, nx, j-1)[0]
@@ -156,9 +156,9 @@ class fdm_solver:
                                 cur_x_index, cur_y_index = x_grid_index + coord[0], y_grid_index + coord[1]
                                 op_type = coord[2]
                                 if op_type == -1:
-                                    right_const -= op.coefficient * coeff * last[cur_y_index][cur_x_index]
+                                    right_const -= op.coefficient(X[cur_x_index], Y[cur_y_index]) * coeff * last[cur_y_index][cur_x_index]
                                 elif op_type == 0:
-                                    left_coeff += op.coefficient * coeff
+                                    left_coeff += op.coefficient(X[cur_x_index], Y[cur_y_index]) * coeff
                                 else:
                                     raise NotImplementedError
                         right_const += self.f(x, y)
