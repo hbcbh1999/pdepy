@@ -28,7 +28,6 @@ class Test(unittest.TestCase):
         self.diri2 = dr.dirichlet_bc(inDomain, onBoundary, getBoundaryValue, domain, (lambda x, y: 1, lambda x, y: 2))
         self.solver = fdm.fdm_solver(self.expression, lambda x, y: 1, self.diri)
         self.solver2 = fdm.fdm_solver(self.expression, lambda x, y: 1, self.diri2)
-
         domain_s = dm.domain(np.array([0, 0]), np.array([1, 1]))
         inDomain_s = lambda x, y: 0 < x < 1 and 0 < y < 1
         onBoundary_s = lambda x, y: abs(x-1) < np.spacing(1) or abs(x) < np.spacing(1) \
