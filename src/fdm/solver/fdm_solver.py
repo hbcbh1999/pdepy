@@ -88,7 +88,7 @@ class fdm_solver:
                                     bv = self.domain_condition.getBoundaryValue(cur_x_coord, cur_y_coord)
                                     u[index] -= op.coefficient(cur_x_coord, cur_y_coord) * irregular_node.coefficient * bv
                                 else:
-                                    A[index, self.grid_to_index[cur_x, cur_y]] += op.coefficient(cur_x_coord, cur_y_coord) * irregular_node.coefficient(cur_x_coord, cur_y_coord)
+                                    A[index, self.grid_to_index[cur_x, cur_y]] += op.coefficient(cur_x_coord, cur_y_coord) * irregular_node.coefficient
                         else:
                             raise TypeError
                         break
