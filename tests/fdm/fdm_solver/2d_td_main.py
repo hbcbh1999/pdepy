@@ -47,7 +47,7 @@ class Test(unittest.TestCase):
             expression = expr.diff_operator_expression([a, b, c])
             self.solver.diff_op_expression = expression
             time, result = self.solver.solve(n, n, 799)
-            print(time, result)
+            #print(time, result)
             assert len(time) == len(result)
 
 if __name__ == '__main__':

@@ -4,7 +4,7 @@
 This framework helps users solve paritial differential equations using finite difference method. Users are allowed to add any differential operators, or change the order of accuracy of the existing operators by modifying their stencils.
 
 ## Supported PDEs
-### 2D Linear (Constant/Variable Coefficient) PDEs on Regular/Irregular Domains
+### 2D Linear (Constant/Variable Coefficient) PDEs on Regular/Irregular Domains with Dirichlet Boundary Condition
 Default rate of convergence: second-order of accuracy.  
 Documentations: https://github.com/Walden-Shen/pdepy/blob/master/docs/2dPDE.ipynb
 
