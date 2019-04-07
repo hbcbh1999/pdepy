@@ -21,7 +21,7 @@ Documentations: https://github.com/Walden-Shen/pdepy/blob/master/docs/2dPDEs.ipy
 
 ### Linear (Constant/Variable coefficient) Time-dependent PDEs
 #### 1D Problems
-Default algorithm: Crank-Nicolson method (fourth-order of accuracy & unconditionally stable).  
+Default algorithm: Crank-Nicolson method (unconditionally stable).  
 Documentations: https://github.com/Walden-Shen/pdepy/blob/master/docs/time_dependent_PDEs.ipynb
 
 #### 2D Problems on Regular Domains
