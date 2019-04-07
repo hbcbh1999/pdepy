@@ -1,7 +1,7 @@
 # pdepy
 [![Build Status](https://travis-ci.org/Walden-Shen/pdepy.svg?branch=master)](https://travis-ci.org/Walden-Shen/pdepy)
 
-This library helps users solve paritial differential equations using finite difference method. Users are allowed to add any differential operators, or change the order of accuracy of the existing operators by modifying their stencils.
+This library helps users solve paritial differential equations using finite difference methods. Users are allowed to add any differential operators, or change the order of accuracy of the existing operators by modifying their stencils.
 
 ## Gist of This Library
 - User Friendly  
