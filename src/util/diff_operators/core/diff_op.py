@@ -10,7 +10,7 @@ class irregular_stencil_node(object):
         self.flawed = flawed
 
 class diff_operator(object):
-    def __init__(self, stencil, coefficient = 1, is_time_dependent = False):
+    def __init__(self, stencil, coefficient = lambda x, y: 1, is_time_dependent = False):
         # a list of tuple whose first element is relative position of node in the stencil, 
         # second element is the coefficient in the fdm equation
         self.stencil = stencil
