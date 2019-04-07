@@ -7,7 +7,9 @@ class time_dependent_operator(diff_op.diff_operator):
         # while the second argument represents y coordinate offset
 
     def get_implicit_stencil(self):
+        if self.stencil is None: raise NotImplementedError
         return self.stencil
     
     def get_explicit_stencil(self):
+        if self.explicit_stencil is None: raise NotImplementedError
         return self.explicit_stencil
