@@ -15,15 +15,12 @@ It's impossible that the library will meet all needs from its users, e.g., highe
 For further introduction to this library, please go to https://github.com/Walden-Shen/pdepy/blob/master/docs/introduction_to_pdepy.ipynb
 
 ## Supported PDEs
-### 2D Linear (Constant/Variable Coefficient) PDEs on Regular/Irregular Domains with Dirichlet Boundary Condition
-Default rate of convergence: second-order of accuracy.  
+### 2D Linear Elliptic PDEs on Regular/Irregular Domains with the Dirichlet Boundary Condition 
 Documentations: https://github.com/Walden-Shen/pdepy/blob/master/docs/2dPDEs.ipynb
 
-### Linear (Constant/Variable coefficient) Time-dependent PDEs
+### Linear Parabolic PDEs on Regular Domains with the Dirichlet Boundary Condition 
 #### 1D Problems
-Default algorithm: Crank-Nicolson method (unconditionally stable).  
 Documentations: https://github.com/Walden-Shen/pdepy/blob/master/docs/time_dependent_PDEs.ipynb
 
 #### 2D Problems on Regular Domains
-Default algorithm: the explicit method (conditionally stable).  
 Documentations: https://github.com/Walden-Shen/pdepy/blob/master/docs/time_dependent_PDEs.ipynb
